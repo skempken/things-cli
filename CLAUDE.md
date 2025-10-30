@@ -241,6 +241,235 @@ To get task UUIDs:
 - **iOS**: Open item → Share → Copy Link
 - Extract UUID from `things:///show?id=<UUID>`
 
+## Development Workflow
+
+This project follows a structured issue-to-merge workflow for all feature development and bug fixes.
+
+### Workflow Overview
+
+```
+1. Issue Creation → 2. Feature Branch → 3. Development → 4. Push & PR → 5. Merge & Close
+```
+
+### 1. Issue Creation & Discussion
+
+**Before starting any work**, create a GitHub issue to:
+- Document the problem or feature request
+- Discuss implementation approaches
+- Get alignment on the solution
+- Track progress publicly
+
+**Creating an issue:**
+
+```bash
+# Using GitHub CLI
+gh issue create \
+  --title "Support non-German Things 3 localizations in JXA operations" \
+  --body "Description of problem and proposed solutions..."
+
+# Or via web interface
+# https://github.com/skempken/things-cli/issues/new
+```
+
+**Issue template structure:**
+- **Problem**: Clear description of the issue
+- **Impact**: Who is affected and how
+- **Proposed Solutions**: Multiple approaches with pros/cons
+- **Implementation Details**: Code locations, technical strategy
+- **Acceptance Criteria**: Definition of done
+- **References**: Related docs, code, issues
+
+**Example**: See [Issue #1](https://github.com/skempken/things-cli/issues/1) for localization
+
+### 2. Feature Branch Development
+
+**Never commit directly to `main`**. Always work on a feature branch:
+
+```bash
+# Create and switch to feature branch
+git checkout -b feature/issue-1-localization
+
+# Or for bug fixes
+git checkout -b fix/issue-2-error-handling
+
+# Or for documentation
+git checkout -b docs/update-readme
+```
+
+**Branch naming conventions:**
+- `feature/<issue-number>-<short-description>` - New features
+- `fix/<issue-number>-<short-description>` - Bug fixes
+- `docs/<description>` - Documentation only
+- `refactor/<description>` - Code refactoring
+- `test/<description>` - Test additions/fixes
+
+**Examples:**
+- `feature/1-localization-support`
+- `fix/3-url-encoding-spaces`
+- `docs/api-examples`
+- `refactor/jxa-error-handling`
+
+### 3. Development & Commits
+
+Work on your feature branch, making commits as you go:
+
+```bash
+# Make changes
+vim things_jxa.py
+
+# Test your changes
+uv run things.py list today
+
+# Stage and commit
+git add things_jxa.py
+git commit -m "feat: add locale auto-detection for JXA lists
+
+Detect Things 3 locale by querying list names via JXA.
+Falls back to English if detection fails.
+Caches result in ~/.things-cli/locale.cache
+
+Fixes #1
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+```
+
+**Commit message format**: See [Git Workflow](#git-workflow) section below
+
+**Important**:
+- Keep commits atomic (one logical change per commit)
+- Write descriptive commit messages
+- Reference the issue number with `Fixes #N` or `Relates to #N`
+- Test your changes before committing
+- Use `--dry-run` flags where available
+
+### 4. Push & Pull Request
+
+When your feature is complete and tested:
+
+```bash
+# Push feature branch to remote
+git push -u origin feature/1-localization-support
+
+# Create pull request using GitHub CLI
+gh pr create \
+  --title "feat: Add locale auto-detection for JXA operations" \
+  --body "## Summary
+- Auto-detect Things 3 locale from list names
+- Cache detected locale in ~/.things-cli/locale.cache
+- Fallback to English if detection fails
+- Backwards compatible with existing German setup
+
+## Changes
+- Modified \`things_jxa.py\` to detect locale dynamically
+- Added caching mechanism for performance
+- Updated tests for multiple locales
+- Documented locale behavior in README
+
+## Testing
+- [x] Tested with English Things 3
+- [x] Tested with German Things 3
+- [x] Verified cache creation and reuse
+- [x] All existing tests pass
+
+Closes #1
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)"
+
+# Or via web interface
+open https://github.com/skempken/things-cli/compare/feature/1-localization-support
+```
+
+**Pull Request Guidelines:**
+- Reference the original issue with `Closes #N` or `Fixes #N`
+- Provide clear summary of changes
+- Include testing checklist
+- Add screenshots/examples if UI changes
+- Request review if working with collaborators
+
+### 5. Merge & Issue Closure
+
+After review and CI passes:
+
+```bash
+# Merge via GitHub CLI (squash merge recommended for clean history)
+gh pr merge --squash --delete-branch
+
+# Or use GitHub web interface
+# Merge pull request → Squash and merge → Delete branch
+```
+
+**The issue will close automatically** if your PR/commit message included:
+- `Closes #N`
+- `Fixes #N`
+- `Resolves #N`
+
+**Post-merge cleanup:**
+
+```bash
+# Switch back to main
+git checkout main
+
+# Pull latest changes
+git pull origin main
+
+# Delete local feature branch (if not already done)
+git branch -d feature/1-localization-support
+```
+
+### Workflow Best Practices
+
+**DO:**
+- ✅ Create issue before starting work
+- ✅ Use descriptive branch names with issue numbers
+- ✅ Make small, focused commits
+- ✅ Test thoroughly before pushing
+- ✅ Reference issues in commits and PRs
+- ✅ Delete branches after merging
+- ✅ Keep PRs focused on one issue
+
+**DON'T:**
+- ❌ Commit directly to `main`
+- ❌ Work without an issue (for non-trivial changes)
+- ❌ Create PRs with unrelated changes
+- ❌ Skip testing
+- ❌ Leave stale branches
+- ❌ Forget to reference the issue number
+
+### Quick Reference
+
+```bash
+# Full workflow example
+gh issue create --title "..." --body "..."           # 1. Create issue (#N)
+git checkout -b feature/N-description                 # 2. Create branch
+# ... make changes, test ...
+git add . && git commit -m "feat: ... Fixes #N"      # 3. Commit
+git push -u origin feature/N-description             # 4. Push
+gh pr create --title "..." --body "... Closes #N"    # 5. Create PR
+gh pr merge --squash --delete-branch                  # 6. Merge & close
+git checkout main && git pull                         # 7. Update main
+```
+
+### Emergency Hotfixes
+
+For critical bugs in production:
+
+```bash
+# Create hotfix branch from main
+git checkout -b hotfix/critical-bug main
+
+# Fix, test, commit
+git add . && git commit -m "fix: critical bug..."
+
+# Push and create PR immediately
+git push -u origin hotfix/critical-bug
+gh pr create --title "HOTFIX: ..." --body "..."
+
+# Fast-track review and merge
+gh pr merge --squash --delete-branch
+```
+
 ## Git Workflow
 
 ### Commit Messages
@@ -380,3 +609,4 @@ All operations worked correctly with German-localized Things 3.
 - Last Commit: 180afe1
 - Things CLI Version: 0.1.0
 - Tested with: Things 3 on macOS (German localization)
+- Documentation: Added comprehensive Development Workflow section
