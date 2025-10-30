@@ -33,9 +33,11 @@ cd things-cli
 uv pip install -e .
 ```
 
-This makes the `things` command available in your terminal. All examples below use this installed command.
+This installs the package in development mode. To use the `things` command, you have two options:
+- **Recommended**: Use `uv run things` (automatically activates the virtual environment)
+- **Alternative**: Activate the virtual environment with `source .venv/bin/activate`, then use `things`
 
-**Development mode**: If you want to run without installation, use `uv run things.py` instead of `things` (see [Running from Source](#running-from-source)).
+All examples below use `things` for brevity, but assume you're using `uv run things` or have activated the virtual environment.
 
 3. (Optional) Set up your auth token for update/modify operations:
 ```bash
@@ -506,24 +508,40 @@ things-cli/
 
 ### Running from Source
 
-**Option 1: Without installation (Development)**
+**Recommended approach:**
 ```bash
-# Run directly with uv (no installation needed)
+# Install in development mode
+uv pip install -e .
+
+# Run with uv (automatically manages the virtual environment)
+uv run things add --title "Test"
+uv run things list today
+```
+
+**Alternative: Activate virtual environment**
+```bash
+# Install in development mode
+uv pip install -e .
+
+# Activate the virtual environment
+source .venv/bin/activate
+
+# Now use the command directly (no uv run needed)
+things add --title "Test"
+things list today
+
+# Deactivate when done
+deactivate
+```
+
+**Without installation:**
+```bash
+# Run the script directly (no installation needed)
 uv run things.py add --title "Test"
 uv run things.py list today
 ```
 
-**Option 2: With installation (Recommended)**
-```bash
-# Install in development mode (makes 'things' command available)
-uv pip install -e .
-
-# Now use the shorter command
-things add --title "Test"
-things list today
-```
-
-All examples in this README assume you have installed the package (Option 2).
+All examples in this README use `things` for brevity, but you should prefix with `uv run` or activate the virtual environment first.
 
 ### Contributing
 

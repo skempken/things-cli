@@ -99,9 +99,9 @@ LOCALE_MAPPINGS = {
 
 **Usage:**
 ```bash
-things list today              # Auto-detect locale
-things list today --locale de  # Force German
-things list today --locale en  # Force English
+uv run things list today              # Auto-detect locale
+uv run things list today --locale de  # Force German
+uv run things list today --locale en  # Force English
 ```
 
 English commands map to localized list names automatically based on the detected or specified locale.
@@ -153,13 +153,22 @@ uv pip install -e .
 
 ### Running Commands
 
-```bash
-# Via uv (recommended during development)
-uv run things.py <command>
+After installation with `uv pip install -e .`, you have these options:
 
-# After installation
+```bash
+# Option 1: Via uv run (recommended, automatically manages venv)
+uv run things <command>
+
+# Option 2: Activate venv first, then use command directly
+source .venv/bin/activate
 things <command>
+deactivate
+
+# Option 3: Run script directly without installation
+uv run things.py <command>
 ```
+
+**Note**: The `things` command is only available within the virtual environment created by uv. Use `uv run things` for the best experience.
 
 ## Common Development Workflows
 
@@ -167,7 +176,7 @@ things <command>
 
 Always use `--dry-run` first:
 ```bash
-uv run things.py add --title "Test Task" --dry-run
+uv run things add --title "Test Task" --dry-run
 # Check URL, then run without --dry-run
 ```
 
@@ -175,27 +184,29 @@ uv run things.py add --title "Test Task" --dry-run
 
 ```bash
 # JXA operations are read-only, safe to run anytime
-uv run things.py list today
-uv run things.py list tags
+uv run things list today
+uv run things list tags
 ```
 
 ### Complete Workflow Example
 
 ```bash
 # 1. Query available tags
-uv run things.py list tags | grep "time"
+uv run things list tags | grep "time"
 
 # 2. Get today's tasks
-uv run things.py list today > tasks.json
+uv run things list today > tasks.json
 
 # 3. Update a task with tag
-uv run things.py update --id <UUID> --add-tags "1h"
+uv run things update --id <UUID> --add-tags "1h"
 
 # 4. Verify update
-uv run things.py list today
+uv run things list today
 ```
 
 ## Testing Checklist
+
+**Note**: All commands below assume you're using `uv run things` or have activated the virtual environment.
 
 ### Write Operations (URL Scheme)
 - [ ] `things add --title "Test" --dry-run` - Shows correct URL
@@ -230,12 +241,12 @@ The `list` command function can shadow Python's `list` type in some contexts. Al
 
 **URL Scheme**: Can create new tags automatically
 ```bash
-things add --title "Test" --tags "new-tag"  # Creates "new-tag"
+uv run things add --title "Test" --tags "new-tag"  # Creates "new-tag"
 ```
 
 **JSON Import**: Cannot create new tags
 ```bash
-things import tasks.json  # Fails if tags don't exist
+uv run things import tasks.json  # Fails if tags don't exist
 ```
 
 ### 3. Date Formats
@@ -561,7 +572,7 @@ Both are well-maintained and stable. No known compatibility issues.
 
 ```bash
 # Use dry-run to see generated URL
-things add --title "Test" --dry-run
+uv run things add --title "Test" --dry-run
 
 # Check URL encoding
 python3 -c "from urllib.parse import quote; print(quote('test string'))"
@@ -587,7 +598,7 @@ python3 -c "import things_jxa; print(things_jxa.get_all_tags())"
 python3 -m json.tool < file.json
 
 # Check for non-existent tags
-things list tags | grep "tag-name"
+uv run things list tags | grep "tag-name"
 ```
 
 ## Performance Notes
