@@ -81,19 +81,30 @@ hasattr(value, '__iter__') and not isinstance(value, str)
 query_string = urlencode(encoded_params, safe='', quote_via=quote)
 ```
 
-### 3. German Localization
+### 3. Multi-Locale Support (Issue #1)
 
-Things 3 is localized - list names are in German:
+Things 3 supports multiple languages, and the CLI now auto-detects or accepts explicit locale settings:
+
 ```python
-LIST_NAME_MAP = {
-    "inbox": "Eingang",
-    "today": "Heute",
-    "tomorrow": "Morgen",
-    # ...
+LOCALE_MAPPINGS = {
+    "de": {"inbox": "Eingang", "today": "Heute", ...},
+    "en": {"inbox": "Inbox", "today": "Today", ...},
 }
 ```
 
-English commands map to German list names automatically.
+**Implementation:**
+- `--locale de/en`: Uses hardcoded mappings (fast, ~0ms overhead)
+- `--locale auto` or omitted: Auto-detects via JXA (~100-500ms first call)
+- `detect_list_names()`: Queries Things 3 to identify localized list names
+
+**Usage:**
+```bash
+things list today              # Auto-detect locale
+things list today --locale de  # Force German
+things list today --locale en  # Force English
+```
+
+English commands map to localized list names automatically based on the detected or specified locale.
 
 ### 4. JSON Output
 
@@ -501,6 +512,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 - ✅ JSON import/export
 - ✅ Dry-run mode
 - ✅ Rich terminal output
+- ✅ Multi-locale support with auto-detection (Issue #1)
 
 ### Potential Future Features
 - [ ] `--format table` for Rich table output (currently only JSON)
@@ -608,5 +620,5 @@ All operations worked correctly with German-localized Things 3.
 - Date: 2025-10-30
 - Last Commit: 180afe1
 - Things CLI Version: 0.1.0
-- Tested with: Things 3 on macOS (German localization)
-- Documentation: Added comprehensive Development Workflow section
+- Tested with: Things 3 on macOS (German and English localization via --locale)
+- Documentation: Added comprehensive Development Workflow section and multi-locale support (Issue #1)

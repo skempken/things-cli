@@ -12,16 +12,97 @@ from rich.console import Console
 
 console = Console()
 
-# Mapping of English list names to German (Things 3 is localized)
-LIST_NAME_MAP = {
-    "inbox": "Eingang",
-    "today": "Heute",
-    "tomorrow": "Morgen",
-    "anytime": "Jederzeit",
-    "upcoming": "Geplant",
-    "someday": "Irgendwann",
-    "logbook": "Logbuch",
+# Hardcoded locale mappings for Things 3 built-in lists
+# Maps English list names to localized names for each supported language
+LOCALE_MAPPINGS = {
+    "de": {
+        "inbox": "Eingang",
+        "today": "Heute",
+        "tomorrow": "Morgen",
+        "anytime": "Jederzeit",
+        "upcoming": "Geplant",
+        "someday": "Irgendwann",
+        "logbook": "Logbuch",
+    },
+    "en": {
+        "inbox": "Inbox",
+        "today": "Today",
+        "tomorrow": "Tomorrow",
+        "anytime": "Anytime",
+        "upcoming": "Upcoming",
+        "someday": "Someday",
+        "logbook": "Logbook",
+    },
 }
+
+# Legacy mapping for backwards compatibility
+LIST_NAME_MAP = LOCALE_MAPPINGS["de"]
+
+
+def detect_list_names() -> Dict[str, str]:
+    """
+    Auto-detect the localized list names from Things 3.
+
+    Queries Things 3 via JXA to get all built-in list names and creates
+    a mapping from English names to the actual localized names.
+
+    Returns:
+        Dictionary mapping English list names to localized names
+
+    Raises:
+        RuntimeError: If detection fails, falls back to German locale
+    """
+    script = '''
+    const things = Application("Things3");
+    const lists = things.lists();
+    const result = [];
+    for (let i = 0; i < lists.length; i++) {
+        result.push(lists[i].name());
+    }
+    JSON.stringify(result);
+    '''
+
+    try:
+        output = run_jxa(script)
+        list_names = json.loads(output)
+
+        # Things 3 built-in lists are returned in a specific order
+        # We map them to their English equivalents by index
+        # Order: Inbox, Today, Upcoming, Anytime, Someday, Logbook (Tomorrow is virtual)
+        english_keys = ["inbox", "today", "upcoming", "anytime", "someday", "logbook"]
+
+        detected_mapping = {}
+        for i, english_key in enumerate(english_keys):
+            if i < len(list_names):
+                detected_mapping[english_key] = list_names[i]
+
+        # Tomorrow is not a real list in Things 3, but a filter
+        # We need to detect it by checking known translations
+        known_tomorrow = {
+            "de": "Morgen",
+            "en": "Tomorrow",
+            # Add more as needed
+        }
+
+        # Try to detect Tomorrow by checking if any known translation exists
+        for locale, tomorrow_name in known_tomorrow.items():
+            if locale in LOCALE_MAPPINGS:
+                first_list = detected_mapping.get("inbox", "")
+                # If we detected Inbox correctly, use the same locale for Tomorrow
+                if first_list == LOCALE_MAPPINGS[locale]["inbox"]:
+                    detected_mapping["tomorrow"] = LOCALE_MAPPINGS[locale]["tomorrow"]
+                    break
+
+        # Fallback: if Tomorrow not detected, try German
+        if "tomorrow" not in detected_mapping:
+            detected_mapping["tomorrow"] = "Morgen"
+
+        return detected_mapping
+
+    except Exception as e:
+        # Fallback to German locale if detection fails
+        console.print(f"[yellow]Warning: Could not auto-detect locale, using German. Error: {e}[/yellow]")
+        return LOCALE_MAPPINGS["de"]
 
 
 def run_jxa(script: str) -> str:
@@ -62,31 +143,43 @@ def run_jxa(script: str) -> str:
         raise RuntimeError("osascript command not found. Are you on macOS?")
 
 
-def get_list_tasks(list_name: str) -> List[Dict[str, Any]]:
+def get_list_tasks(list_name: str, locale: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     Get all tasks from a built-in list.
 
     Args:
         list_name: Name of the list (inbox, today, tomorrow, anytime, upcoming, someday, logbook)
+        locale: Optional locale code (e.g., 'de', 'en'). If None or 'auto', auto-detects locale.
 
     Returns:
         List of task dictionaries
     """
-    # Translate English list name to German
-    german_name = LIST_NAME_MAP.get(list_name.lower(), list_name)
+    # Determine the mapping to use based on locale parameter
+    if locale and locale != "auto" and locale in LOCALE_MAPPINGS:
+        # Use hardcoded mapping for specified locale (fast)
+        name_mapping = LOCALE_MAPPINGS[locale]
+    elif locale is None or locale == "auto":
+        # Auto-detect locale from Things 3 (slower, but automatic)
+        name_mapping = detect_list_names()
+    else:
+        # Unknown locale, fall back to auto-detection
+        name_mapping = detect_list_names()
+
+    # Translate English list name to localized name
+    localized_name = name_mapping.get(list_name.lower(), list_name)
 
     script = f'''
     const things = Application("Things3");
     const lists = things.lists();
     let targetList = null;
     for (let i = 0; i < lists.length; i++) {{
-        if (lists[i].name() === "{german_name}") {{
+        if (lists[i].name() === "{localized_name}") {{
             targetList = lists[i];
             break;
         }}
     }}
     if (!targetList) {{
-        throw new Error("List not found: {german_name}");
+        throw new Error("List not found: {localized_name}");
     }}
 
     const tasks = targetList.toDos();

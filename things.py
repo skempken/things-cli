@@ -572,6 +572,7 @@ def list(
     tag: Optional[str] = typer.Option(None, "--tag", help="Filter by tag"),
     area: Optional[str] = typer.Option(None, "--area", help="Filter by area"),
     project: Optional[str] = typer.Option(None, "--project", help="Filter by project"),
+    locale: Optional[str] = typer.Option(None, "--locale", help="Locale code (e.g., 'de', 'en') or 'auto' for auto-detection. Default: auto"),
 ):
     """List tasks and metadata from Things 3 (read-only, requires JXA)"""
 
@@ -602,7 +603,7 @@ def list(
 
         if view and view in ["today", "inbox", "upcoming", "anytime", "someday", "logbook", "tomorrow"]:
             # Built-in list view
-            tasks = things_jxa.get_list_tasks(view)
+            tasks = things_jxa.get_list_tasks(view, locale=locale)
         elif tag:
             # Filter by tag
             tasks = things_jxa.get_tasks_by_tag(tag)
@@ -618,8 +619,10 @@ def list(
             console.print("  Views: today, inbox, upcoming, anytime, someday, logbook")
             console.print("  Metadata: tags, areas, projects")
             console.print("  Filters: --tag, --area, --project")
+            console.print("  Options: --locale [de|en|auto]")
             console.print("\nExamples:")
             console.print("  things list today")
+            console.print("  things list today --locale en")
             console.print("  things list --tag work")
             console.print("  things list --area Personal")
             raise typer.Exit(1)

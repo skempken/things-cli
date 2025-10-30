@@ -187,6 +187,28 @@ things list --area "Personal"
 things list --project "Website Redesign"
 ```
 
+#### Locale Support
+
+Things CLI supports multiple languages through the `--locale` parameter:
+
+```bash
+# Auto-detect locale from Things 3 (default)
+things list today
+
+# Use German locale (fast, no auto-detection)
+things list today --locale de
+
+# Use English locale (fast, no auto-detection)
+things list today --locale en
+```
+
+**Supported locales:**
+- `de` - German (Deutsch)
+- `en` - English
+- `auto` - Auto-detect (default)
+
+**Note:** The `--locale` parameter only affects built-in list queries (`today`, `inbox`, etc.). When specifying a locale explicitly (e.g., `--locale de`), the CLI uses hardcoded mappings for better performance. When omitted or set to `auto`, the CLI automatically detects your Things 3 language settings.
+
 #### Query Metadata
 
 ```bash
