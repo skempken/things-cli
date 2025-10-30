@@ -556,6 +556,86 @@ def export_template(
 
 
 # ============================================================================
+# Read/List Commands (via JXA)
+# ============================================================================
+
+try:
+    import things_jxa
+    JXA_AVAILABLE = True
+except ImportError:
+    JXA_AVAILABLE = False
+
+
+@app.command()
+def list(
+    view: Optional[str] = typer.Argument(None, help="List view: today, inbox, upcoming, anytime, someday, logbook, tags, areas, projects"),
+    tag: Optional[str] = typer.Option(None, "--tag", help="Filter by tag"),
+    area: Optional[str] = typer.Option(None, "--area", help="Filter by area"),
+    project: Optional[str] = typer.Option(None, "--project", help="Filter by project"),
+):
+    """List tasks and metadata from Things 3 (read-only, requires JXA)"""
+
+    if not JXA_AVAILABLE:
+        console.print("[red]Error: things_jxa module not found[/red]")
+        console.print("[yellow]The list command requires the things_jxa.py module[/yellow]")
+        raise typer.Exit(1)
+
+    try:
+        # Metadata queries
+        if view == "tags":
+            tags = things_jxa.get_all_tags()
+            print(json.dumps(tags, indent=2, ensure_ascii=False))
+            return
+
+        if view == "areas":
+            areas = things_jxa.get_all_areas()
+            print(json.dumps(areas, indent=2, ensure_ascii=False))
+            return
+
+        if view == "projects":
+            projects = things_jxa.get_all_projects()
+            print(json.dumps(projects, indent=2, ensure_ascii=False))
+            return
+
+        # Task queries
+        tasks = []
+
+        if view and view in ["today", "inbox", "upcoming", "anytime", "someday", "logbook", "tomorrow"]:
+            # Built-in list view
+            tasks = things_jxa.get_list_tasks(view)
+        elif tag:
+            # Filter by tag
+            tasks = things_jxa.get_tasks_by_tag(tag)
+        elif area:
+            # Filter by area
+            tasks = things_jxa.get_tasks_by_area(area)
+        elif project:
+            # Filter by project
+            tasks = things_jxa.get_tasks_by_project(project)
+        else:
+            # No filter specified - show help
+            console.print("[yellow]Please specify a view or filter:[/yellow]")
+            console.print("  Views: today, inbox, upcoming, anytime, someday, logbook")
+            console.print("  Metadata: tags, areas, projects")
+            console.print("  Filters: --tag, --area, --project")
+            console.print("\nExamples:")
+            console.print("  things list today")
+            console.print("  things list --tag work")
+            console.print("  things list --area Personal")
+            raise typer.Exit(1)
+
+        # Output as JSON
+        print(json.dumps(tasks, indent=2, ensure_ascii=False))
+
+    except RuntimeError as e:
+        console.print(f"[red]Error: {e}[/red]")
+        raise typer.Exit(1)
+    except Exception as e:
+        console.print(f"[red]Unexpected error: {e}[/red]")
+        raise typer.Exit(1)
+
+
+# ============================================================================
 # Entry point
 # ============================================================================
 

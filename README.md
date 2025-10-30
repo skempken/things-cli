@@ -5,11 +5,13 @@ A powerful command-line interface for [Things 3](https://culturedcode.com/things
 ## Features
 
 - **Complete URL Scheme Support**: All Things URL commands (add, update, show, search, json)
-- **Intuitive Subcommands**: Git-like CLI structure (`things add`, `things show`, etc.)
+- **Read Operations via JXA**: Query tasks, projects, areas, and tags directly from the terminal
+- **Intuitive Subcommands**: Git-like CLI structure (`things add`, `things list`, etc.)
 - **Batch Operations**: Import/export tasks and projects via JSON
 - **Rich Output**: Beautiful terminal output with colors and formatting
 - **Dry-run Mode**: Preview URLs before execution
 - **Template System**: Export JSON templates for common workflows
+- **JSON Output**: Machine-readable output for integration with other tools
 
 ## Requirements
 
@@ -141,6 +143,94 @@ things search
 
 # Search with pre-filled query
 things search --query "meeting notes"
+```
+
+### Read Operations (via JXA)
+
+The CLI supports reading data from Things 3 using JavaScript for Automation (JXA). This allows you to query tasks, projects, and metadata directly from the terminal.
+
+**Note**: Read operations require Things 3 to be running and are only available on macOS.
+
+#### List Tasks by View
+
+```bash
+# Show today's tasks
+things list today
+
+# Show inbox
+things list inbox
+
+# Show upcoming tasks
+things list upcoming
+
+# Show anytime tasks
+things list anytime
+
+# Show someday tasks
+things list someday
+
+# Show completed tasks (logbook)
+things list logbook
+```
+
+#### Filter Tasks
+
+```bash
+# Filter by tag
+things list --tag work
+things list --tag "1h"
+
+# Filter by area
+things list --area "Personal"
+
+# Filter by project
+things list --project "Website Redesign"
+```
+
+#### Query Metadata
+
+```bash
+# List all tags
+things list tags
+
+# List all areas (with task counts)
+things list areas
+
+# List all projects (with details)
+things list projects
+```
+
+#### Output Format
+
+All `list` commands output JSON for easy parsing and integration with other tools:
+
+```json
+[
+  {
+    "id": "ABC123DEF456",
+    "name": "Task title",
+    "status": "open",
+    "notes": "Task notes",
+    "tagNames": "tag1, tag2",
+    "dueDate": "Mon Nov 15 2025...",
+    "creationDate": "Thu Oct 30 2025..."
+  }
+]
+```
+
+**Processing with jq:**
+```bash
+# Count today's tasks
+things list today | jq 'length'
+
+# Get task names only
+things list today | jq '.[].name'
+
+# Filter for tasks with specific tag
+things list today | jq '.[] | select(.tagNames | contains("urgent"))'
+
+# Export to CSV
+things list today | jq -r '.[] | [.name, .status, .tagNames] | @csv'
 ```
 
 ### Advanced: JSON Operations
