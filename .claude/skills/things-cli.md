@@ -32,14 +32,6 @@ things update --id TASK-ID --add-tags "2h" --append-notes "Additional info"
 things show --id today
 ```
 
-### Always Test First
-
-```bash
-# Use --dry-run to preview any write operation
-things add --title "Test" --dry-run
-# Shows: things:///add?title=Test
-```
-
 ---
 
 ## Command Categories
@@ -689,49 +681,6 @@ xargs -I {} things update --id {} --add-tags "urgent" < ids.txt
 
 ---
 
-## Architecture Notes
-
-### Two APIs, Two Purposes
-
-**JXA (JavaScript for Automation)** - Read Operations
-- List tasks, projects, areas, tags
-- Query and filter
-- **Cannot write** (intentional API limitation by Cultured Code)
-- Requires Things 3 running
-- Returns JSON
-
-**URL Scheme** - Write Operations
-- Create, update tasks/projects
-- Navigate views
-- **Cannot read** (returns no data except via x-callback-url)
-- Works even if Things is closed (opens it)
-- Requires `THINGS_TOKEN` for modifications
-
-### Why Both?
-
-Things 3 intentionally separates read/write to:
-1. Protect data integrity (no scripts can corrupt database)
-2. Maintain user control (URL scheme shows dialogs/requires token)
-3. Support sync (URL scheme integrates with cloud sync)
-
-### German Localization
-
-Things is localized, but the CLI handles this automatically:
-
-```python
-LIST_NAME_MAP = {
-    "inbox": "Eingang",
-    "today": "Heute",
-    "tomorrow": "Morgen",
-    "anytime": "Jederzeit",
-    "upcoming": "Geplant",
-    "someday": "Irgendwann",
-    "logbook": "Logbuch",
-}
-```
-
-Commands use English, CLI maps to German internally.
-
 ### Known Limitations
 
 **Cannot do via CLI:**
@@ -788,20 +737,3 @@ things import tasks.json
 ```bash
 things <command> --dry-run
 ```
-
----
-
-## Resources
-
-- **Project GitHub**: https://github.com/skempken/things-cli
-- **Things URL Scheme Docs**: https://culturedcode.com/things/support/articles/2803573/
-- **CLAUDE.md**: See `CLAUDE.md` for architecture details
-- **README.md**: Full user documentation
-
----
-
-## Last Updated
-
-- Date: 2025-10-30
-- Things CLI Version: 0.1.0
-- Tested with: Things 3 (German localization)

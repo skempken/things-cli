@@ -1,6 +1,6 @@
 # Things CLI
 
-A powerful command-line interface for [Things 3](https://culturedcode.com/things/) using the Things URL scheme. Manage your tasks, projects, and to-dos directly from the terminal.
+A powerful command-line interface for [Things 3](https://culturedcode.com/things/) using the Things URL scheme and JXA (JavaScript for Automation). Manage your tasks, projects, and to-dos directly from the terminal with both read and write capabilities.
 
 ## Features
 
@@ -24,6 +24,7 @@ A powerful command-line interface for [Things 3](https://culturedcode.com/things
 
 1. Clone this repository:
 ```bash
+git clone https://github.com/skempken/things-cli.git
 cd things-cli
 ```
 
@@ -488,10 +489,15 @@ This CLI uses macOS's `open` command to trigger Things URLs. Ensure you're runni
 
 ```
 things-cli/
+├── things.py         # Main CLI with Typer subcommands
+├── things_jxa.py     # JXA Helper Module for read operations
 ├── pyproject.toml    # uv project configuration
-├── things.py         # Monolithic CLI script
-├── README.md         # This file
-└── .env.example      # Environment variable template
+├── README.md         # User documentation
+├── CLAUDE.md         # Project knowledge for AI assistants
+├── LICENSE           # MIT License
+├── .gitignore        # Git ignore rules
+├── .env.example      # Environment variable template
+└── uv.lock           # Dependency lock file
 ```
 
 ### Running from Source
@@ -500,8 +506,11 @@ things-cli/
 # Install in development mode
 uv pip install -e .
 
-# Run directly
-python things.py add --title "Test"
+# Run via uv (recommended during development)
+uv run things.py add --title "Test"
+
+# Or run after installation
+things add --title "Test"
 ```
 
 ### Contributing
