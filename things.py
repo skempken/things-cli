@@ -84,8 +84,8 @@ def build_url(command: str, params: Dict[str, Any]) -> str:
     for key, value in params.items():
         if isinstance(value, bool):
             encoded_params[key] = str(value).lower()
-        elif isinstance(value, list):
-            # Join lists with newlines (encoded as %0a)
+        elif hasattr(value, '__iter__') and not isinstance(value, str):
+            # Join lists/iterables with newlines (encoded as %0a)
             encoded_params[key] = "\n".join(str(v) for v in value)
         else:
             encoded_params[key] = str(value)
